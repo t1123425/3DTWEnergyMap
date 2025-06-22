@@ -1,5 +1,6 @@
 import { useThree } from "@react-three/fiber";
-import { useRef,useEffect,useMemo, type FC } from "react"
+import { useRef,useEffect,useMemo,useState, type FC } from "react"
+import { Html } from "@react-three/drei";
 import { Group} from 'three'
 import { mainStore } from "../../../store";
 import { type SVGResult } from "three/examples/jsm/Addons.js";
@@ -25,11 +26,43 @@ type PowerData = {
 }
 
 type PowerMapProp = {
-    currentArea: PowerData,
     svgData:SVGResult
 }
+type SelectorProp = {
+    setSelectorData: (area:PowerData) => void
+}
+const DataSelector:FC<SelectorProp> = ({setSelectorData}) => {
+
+    return (
+        <Html
+        as='div'
+        fullscreen
+        style={{
+            left:0,
+            transform: 'translate(-45%, 50%)'
+        }}
+        prepend>
+            <select className="selector bg-amber-50" onChange={(e)=>{
+                const selectedData = taiwanPower.data.find(item => item.area === e.target.value)
+                if(selectedData){
+                    setSelectorData(selectedData)
+                }
+                
+            }}>
+                {
+                    taiwanPower.data.map((e,i)=> {
+                        return <option key={i} value={e.area}>
+                            {e.area}
+                        </option>
+                    })
+                }
+            </select>
+        </Html>
+    )
+}
 const mapCenter = new THREE.Vector3()
-const TWPowerMap:FC<PowerMapProp> = ({currentArea,svgData}) => {
+const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
+    const [currentAreaData,setCurrentAreaData] = useState(taiwanPower.data[0])
     const taiwanGIS = mainStore(state => state.taiwanGIS);
     const groupRef = useRef<Group| null>(null);
     const EffectRan = useRef(false);
@@ -43,7 +76,7 @@ const TWPowerMap:FC<PowerMapProp> = ({currentArea,svgData}) => {
             //設定選出區域顏色
             const areaColor = gis?.area ? colorObj[gis.area] : '';
             //確認已被選取區域
-            const isHover = currentArea.area === gis?.area;
+            const isHover = currentAreaData.area === gis?.area;
             let ShowInfoType = ''
             let infolist:string[] = [];
             // 用電量預設選擇
@@ -64,7 +97,7 @@ const TWPowerMap:FC<PowerMapProp> = ({currentArea,svgData}) => {
                 }
             
         })
-    },[svgData,currentArea,taiwanGIS])
+    },[svgData,currentAreaData,taiwanGIS])
 
     useEffect(()=>{
         if(EffectRan.current && groupRef.current){
@@ -83,18 +116,22 @@ const TWPowerMap:FC<PowerMapProp> = ({currentArea,svgData}) => {
        
     },[])
     return (
-        <group ref={groupRef}>
-            {
-                powerData.map((data,i)=> (
-                        <Area key={i} 
-                            shape={data.shape}
-                            areaColor={data.areaColor}
-                            isHover={data.isHover}
-                            ShowInfoType={data.ShowInfoType}
-                            infoList={data.infolist}  />
-                 ))
-            }
-        </group>
+        <>
+             <DataSelector setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } /> 
+             <group ref={groupRef}>
+                {
+                    powerData.map((data,i)=> (
+                            <Area key={i} 
+                                shape={data.shape}
+                                areaColor={data.areaColor}
+                                isHover={data.isHover}
+                                ShowInfoType={data.ShowInfoType}
+                                infoList={data.infolist}  />
+                    ))
+                }
+            </group>
+        </>
+       
     )
 }
 export default TWPowerMap;

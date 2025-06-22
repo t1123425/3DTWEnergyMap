@@ -11,27 +11,21 @@ type AreaProp = {
     ShowInfoType?:string,
     infoList?:string[],
     isHover?:boolean,
-    hoverArea?: string | null,
-    setHoverArea?: (newArea:string | null)=> void,
+    isShowModel?:boolean
 }
-// const hoverCheck = (hoverArea:string | null,id:string) => {
-//     return hoverArea === id;
-// }
+
 const defaultsVector = new THREE.Vector3(1,1,1);
 const targetScale = new THREE.Vector3(1,1,2)
 const alpha:number = 0.3;
-const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList}) => {
+const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShowModel}) => {
     const areaRef = useRef<THREE.Mesh|null>(null);
     const insideMeshRef = useRef<THREE.Mesh|null>(null);
     const EffectRan = useRef(false);
-    // const hoverCheck = useMemo(()=>{
-    //     return hoverArea === shape.userData?.node.id
-    // },[hoverArea,shape.userData?.node.id])
 
     const renderInfoContent = useMemo(()=> {
         if(ShowInfoType === 'power'){
             return (
-                <div className="powerInfo">
+                <div className=" bg-amber-50 p-4 rounded-2xl border border-black">
                     {
                         infoList?.length && (
                             <ul className="mt-1">
@@ -42,6 +36,8 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList}) => {
                         )
                     }
                 </div>)
+        }else if(ShowInfoType?.includes('renew')){
+            return <div className="info text-white" >{infoList?.length && infoList.map((e,i) => <p key={i}>{e}</p>)}</div>
         }else{
             return null
         }
@@ -51,11 +47,12 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList}) => {
         return new THREE.MeshStandardMaterial({ color: isHover ? areaColor : shape.color ,side:THREE.BackSide})
     },[areaColor,shape,isHover])
 
+
     useEffect(()=>{
         if(EffectRan.current && areaRef.current && insideMeshRef.current && ShowInfoType){
             const box = new THREE.Box3().setFromObject(areaRef.current);
             const center = box.getCenter(new THREE.Vector3());
-            console.log('center',center);
+            //console.log('center',center);
             
             if(insideMeshRef.current){
                 insideMeshRef.current.position.set(center.x,center.y,center.z);
@@ -72,7 +69,6 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList}) => {
     useFrame(()=>{
         if(areaRef.current){
             areaRef.current.scale.lerp(isHover?targetScale:defaultsVector,alpha);
-            //areaRef.current.scale.lerp(hoverCheck(hoverArea,shape.userData?.node.id)?targetScale:defaultsVector,alpha)
             // const material = areaRef.current.material as THREE.MeshStandardMaterial
             // material.color.set(hoverCheck?'orange':shape.color)
         }
@@ -86,40 +82,29 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList}) => {
                 {/* <meshStandardMaterial  color={shape.color}  side={THREE.BackSide}/> */}
                 {/* 添加地區邊線 */}
                 <Edges lineWidth={1} threshold={15} color={'#fff'} />
-                {/* {
-                    ShowInfoType && isHover && (
-                        <mesh ref={insideMeshRef}>
-                            <boxGeometry args={[20,20,50]} />
-                            <meshBasicMaterial color={'red'} />
-                        </mesh>
-                    )
-                } */}
             </mesh>
-            {/* {
-                ShowInfoType && (
-                    <mesh ref={insideMeshRef}>
-                        {
-                            isHover?(
-                                 <FloatInfoBlock >
-                                {
-                                    renderInfoContent
-                                }
-                            </FloatInfoBlock>   
-                            ):null
-                        }
-                    </mesh>
-                )
-            } */}
              <mesh ref={insideMeshRef} >
                 {
-                    ShowInfoType && isHover ?(
+                    ShowInfoType === 'power' && isHover && (
                          
                          <FloatInfoBlock >
                             {
                                 renderInfoContent
                             }
                         </FloatInfoBlock>     
-                    ):null
+                    )
+                }
+                {
+                    isShowModel && (
+                        <>
+                            <OLBModel path={'./GLBs/'+ShowInfoType+'.glb'} rotateX={-Math.PI/4} scale={ShowInfoType === 'renewGeothermal'?0.3:1} />
+                            <FloatInfoBlock >
+                                {
+                                    renderInfoContent
+                                }
+                            </FloatInfoBlock>
+                        </>
+                    )
                 }
             </mesh>
             {/* <OLBModel path="./GLBs/WindTurbine.glb" rotateX={-Math.PI/4}/> */}

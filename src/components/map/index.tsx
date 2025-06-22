@@ -1,10 +1,9 @@
 import { useLoader } from "@react-three/fiber";
-import { useRef,useEffect,useState, type FC } from "react"
+import { useRef,useEffect } from "react"
 import {DirectionalLight} from 'three'
 import { SVGLoader } from "three/examples/jsm/Addons.js";
 import TaiwanMapSVG from '../../assets/tw.svg';
-import { Html, OrbitControls } from '@react-three/drei';
-import taiwanPower from '../../json/taiwanPower.json';
+import { OrbitControls } from '@react-three/drei';
 import { mainStore } from "../../store";
 import TWPowerMap from "./twpower";
 import RenewEnegryMap from "./renewEnegry";
@@ -45,60 +44,19 @@ const DirectLight = () => {
 //     powerConsumption?:number
 // }
 // 
-type PowerData = {
-    date:string,
-    area:string,
-    powerGen: string,
-    powerConsumption: string
-}
-type SelectorProp = {
-    setSelectorData: (area:PowerData) => void
-}
-const DataSelector:FC<SelectorProp> = ({setSelectorData}) => {
-
-    return (
-        <Html
-        as='div'
-        fullscreen
-        style={{
-            left:0,
-            transform: 'translate(-45%, 50%)'
-        }}
-        prepend>
-            <select className="selector bg-amber-50" onChange={(e)=>{
-                const selectedData = taiwanPower.data.find(item => item.area === e.target.value)
-                if(selectedData){
-                    setSelectorData(selectedData)
-                }
-                
-            }}>
-                {
-                    taiwanPower.data.map((e,i)=> {
-                        return <option key={i} value={e.area}>
-                            {e.area}
-                        </option>
-                    })
-                }
-            </select>
-        </Html>
-    )
-}
 
 const Map = () => {
-    const [currentAreaData,setCurrentAreaData] = useState(taiwanPower.data[0])
     const svgData = useLoader(SVGLoader,TaiwanMapSVG)
     const mapMode = mainStore((state)=> state.mapMode);
     return (
           <>
             <OrbitControls />
-            <DataSelector setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } />
             {
-                mapMode === 'twp' && <TWPowerMap currentArea={currentAreaData} svgData={svgData} />
+                mapMode === 'twp' && <TWPowerMap svgData={svgData} />
             }
             {
                 mapMode === 'rnest' && <RenewEnegryMap svgData={svgData} />
             }
-            {/* <TaiwanMap currentArea={currentAreaData} /> */}
             <ambientLight color={0xffffff} intensity={0.8} /> 
             <DirectLight />
          </>

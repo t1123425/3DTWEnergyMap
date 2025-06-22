@@ -5,24 +5,56 @@ import { Group} from 'three'
 import { type SVGResult } from "three/examples/jsm/Addons.js";
 import Area from "../area";
 import * as THREE from "three";
+import RenewableEnergyStation from  '../../../json/RenewableEnergyStation.json'
+import { mainStore } from "../../../store";
 
 const mapCenter = new THREE.Vector3()
 type RenewMapProps = {
     svgData:SVGResult
 }
+/**(能源別\/Type of Energy)
+ * EnegryType:
+ * Wind
+ * Solar
+ * Geothermal
+ * 
+ */
+const EnegryType = 'Wind';
+const EnegryTypeKey =  "能源別\/Type of Energy";
+const addressTypeKey = "地址\/Address";
+const nameKey = "發電站名稱\/Name of The Power Station";
+
 const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
     const groupRef = useRef<Group| null>(null);
     const EffectRan = useRef(false);
     const {camera } = useThree();
     const box = new THREE.Box3();
+    const taiwanGIS = mainStore(state => state.taiwanGIS);
     
     const renewEnergyData = useMemo(()=>{
+        //console.log('RenewableEnergyStation',RenewableEnergyStation);
+        const selectedEnegryStations = RenewableEnergyStation.filter(e => e[EnegryTypeKey].includes(EnegryType))
+        console.log('selectedEnegryStations',selectedEnegryStations);
         return svgData.paths.map((path)=>{
+            //找出地圖上各gis
+            const gis = taiwanGIS.find(e => e.cityId === path.userData?.node.id)
+            const selectedEnegryStation = selectedEnegryStations.find(e => gis?.ch_name?e[addressTypeKey].includes(gis?.ch_name):'')
+            let ShowInfoType = ''
+            let infolist:string[] = [];
+            let isShowModel = false;
+            if(path.userData?.node.nodeName === 'path'){
+                ShowInfoType = 'renew'+EnegryType
+                infolist = selectedEnegryStation?[selectedEnegryStation[nameKey]]:[]
+                isShowModel = selectedEnegryStation?true:false;
+            }
             return {
-                shape:path
+                shape:path,
+                ShowInfoType,
+                isShowModel,
+                infolist
             }
         })
-    },[svgData])
+    },[svgData,taiwanGIS])
     // const getPowerGen = useCallback(()=>{
     //     fetch('../json/gis_with_area_and_ch_name.json').then(res => res.json()).then(data => {
     //         console.log('data',data);
@@ -52,7 +84,10 @@ const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
             {
                 renewEnergyData.map((data,i)=> (
                     <Area key={i}
-                        shape={data.shape} />
+                        shape={data.shape}
+                        ShowInfoType={data.ShowInfoType}
+                        isShowModel={data.isShowModel}
+                        infoList={data.infolist} />
                 ))
             }
         </group>
