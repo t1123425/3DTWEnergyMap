@@ -24,38 +24,7 @@ const colorObj:MapColorObj = {
 type PowerMapProp = {
     svgData:SVGResult
 }
-// type SelectorProp = {
-//     setSelectorData: (area:PowerData) => void
-// }
-// const DataSelector:FC<SelectorProp> = ({setSelectorData}) => {
 
-//     return (
-//         <Html
-//         as='div'
-//         fullscreen
-//         style={{
-//             left:0,
-//             transform: 'translate(-45%, 0)'
-//         }}
-//         prepend>
-//             <select className="selector bg-amber-50" onChange={(e)=>{
-//                 const selectedData = taiwanPower.data.find(item => item.area === e.target.value)
-//                 if(selectedData){
-//                     setSelectorData(selectedData)
-//                 }
-                
-//             }}>
-//                 {
-//                     taiwanPower.data.map((e,i)=> {
-//                         return <option key={i} value={e.area}>
-//                             {e.area}
-//                         </option>
-//                     })
-//                 }
-//             </select>
-//         </Html>
-//     )
-// }
 const mapCenter = new THREE.Vector3()
 const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
     const [currentAreaData,setCurrentAreaData] = useState(taiwanPower.data[0])

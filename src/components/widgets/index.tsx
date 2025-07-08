@@ -24,7 +24,7 @@ export const PowerAreaDropdownSelector:FC<SelectorProp> = ({selectList,currentSe
                 className="w-full bg-white border border-gray-300 rounded px-4 py-2 text-left shadow focus:outline-none"
                 onClick={() => setIsOpen((prev) => !prev)}
               >
-                {currentSelect.area}
+                {currentSelect.areaName}
                 <span className="float-right">&#9662;</span>
               </button>
               {isOpen && (
@@ -40,7 +40,7 @@ export const PowerAreaDropdownSelector:FC<SelectorProp> = ({selectList,currentSe
                         setSelectorData(option)
                       }}
                     >
-                      {option.area}
+                      {option.areaName}
                     </li>
                   ))}
                 </ul>
