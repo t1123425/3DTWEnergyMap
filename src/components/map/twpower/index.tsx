@@ -1,12 +1,15 @@
-import { useThree } from "@react-three/fiber";
+import {  useThree } from "@react-three/fiber";
 import { useRef,useEffect,useMemo,useState, type FC } from "react"
-import { Html } from "@react-three/drei";
+//import { Html } from "@react-three/drei";
 import { Group} from 'three'
 import { mainStore } from "../../../store";
 import { type SVGResult } from "three/examples/jsm/Addons.js";
 import Area from "../area";
 import * as THREE from "three";
 import taiwanPower from '../../../json/taiwanPower.json';
+import type { PowerData } from "../../../utils/types";
+import { PowerAreaDropdownSelector } from "../../widgets";
+//import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 type MapColorObj = {
     [key:string]:string
@@ -18,56 +21,53 @@ const colorObj:MapColorObj = {
     South: 'green'
 }
 
-type PowerData = {
-    date:string,
-    area:string,
-    powerGen: string,
-    powerConsumption: string
-}
-
 type PowerMapProp = {
     svgData:SVGResult
 }
-type SelectorProp = {
-    setSelectorData: (area:PowerData) => void
-}
-const DataSelector:FC<SelectorProp> = ({setSelectorData}) => {
+// type SelectorProp = {
+//     setSelectorData: (area:PowerData) => void
+// }
+// const DataSelector:FC<SelectorProp> = ({setSelectorData}) => {
 
-    return (
-        <Html
-        as='div'
-        fullscreen
-        style={{
-            left:0,
-            transform: 'translate(-45%, 50%)'
-        }}
-        prepend>
-            <select className="selector bg-amber-50" onChange={(e)=>{
-                const selectedData = taiwanPower.data.find(item => item.area === e.target.value)
-                if(selectedData){
-                    setSelectorData(selectedData)
-                }
+//     return (
+//         <Html
+//         as='div'
+//         fullscreen
+//         style={{
+//             left:0,
+//             transform: 'translate(-45%, 0)'
+//         }}
+//         prepend>
+//             <select className="selector bg-amber-50" onChange={(e)=>{
+//                 const selectedData = taiwanPower.data.find(item => item.area === e.target.value)
+//                 if(selectedData){
+//                     setSelectorData(selectedData)
+//                 }
                 
-            }}>
-                {
-                    taiwanPower.data.map((e,i)=> {
-                        return <option key={i} value={e.area}>
-                            {e.area}
-                        </option>
-                    })
-                }
-            </select>
-        </Html>
-    )
-}
+//             }}>
+//                 {
+//                     taiwanPower.data.map((e,i)=> {
+//                         return <option key={i} value={e.area}>
+//                             {e.area}
+//                         </option>
+//                     })
+//                 }
+//             </select>
+//         </Html>
+//     )
+// }
 const mapCenter = new THREE.Vector3()
 const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
     const [currentAreaData,setCurrentAreaData] = useState(taiwanPower.data[0])
     const taiwanGIS = mainStore(state => state.taiwanGIS);
+    // const zoomInVectors = mainStore(state => state.zoomInVectors);
+    // const controlsRef = useRef<OrbitControlsImpl | null>(null);
+
     const groupRef = useRef<Group| null>(null);
     const EffectRan = useRef(false);
     const {camera } = useThree();
     const box = new THREE.Box3();
+    //const [animating, setAnimating] = useState(false)
     const powerData = useMemo(()=>{
         
         return svgData.paths.map((path) => {
@@ -84,6 +84,7 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
                gis?.cityId === 'TWTXG' || 
                gis?.cityId === 'TWKHH' || 
                gis?.cityId === 'TWHUA' ) && path.userData?.node.nodeName === 'path'){
+             
                 const getTaiwanPowerData = taiwanPower.data.find(e => gis?.area === e.area)
                 ShowInfoType = 'power'
                 infolist = ['發電量:'+getTaiwanPowerData?.powerGen,'用電量:'+getTaiwanPowerData?.powerConsumption]
@@ -97,27 +98,77 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
                 }
             
         })
-    },[svgData,currentAreaData,taiwanGIS])
+    },[svgData,currentAreaData,taiwanGIS]) 
+    // const targetPos = useMemo(()=>{
+    //     const areaIndex = taiwanPower.data.findIndex(e => e.area === currentAreaData.area)
+    //     // zoomInVectors 0:中部 1:南部 2:東部 3:北部
+    //     if(zoomInVectors.length){
+    //         const textVector = [
+    //             new THREE.Vector3(zoomInVectors[3].x,-zoomInVectors[3].y,0),
+    //             new THREE.Vector3(zoomInVectors[0].x,-zoomInVectors[0].y,0),
+    //             new THREE.Vector3(zoomInVectors[1].x,-(zoomInVectors[1].y*2),0),
+    //             new THREE.Vector3(zoomInVectors[2].x,-zoomInVectors[2].y,0),
+    //         ]
+    //         return textVector[areaIndex];
+    //     }else{
+    //         return new THREE.Vector3();
+    //     }
+       
+    // },[currentAreaData,zoomInVectors])
+    // useFrame(()=>{
+    //     if(EffectRan.current && groupRef.current && controlsRef.current && animating){
+    //         const targetCameraPos = new THREE.Vector3(0,200,400)
+    //         camera.position.lerp(targetCameraPos,0.05)
 
+    //         controlsRef.current.target.lerp(targetPos,0.05);
+    //         controlsRef.current.update()
+    //         // 始終朝向目標地區
+    //         camera.lookAt(targetPos);
+    //         const distance = camera.position.distanceTo(targetCameraPos)
+    //         if(distance < 1){
+    //             console.log('stop aniamte and show targetPos',targetPos);
+    //             setAnimating(false)
+    //         }
+    //     }
+    // })
     useEffect(()=>{
         if(EffectRan.current && groupRef.current){
             groupRef.current.rotateX((Math.PI)- 45);
             groupRef.current.rotateZ(Math.PI/8);
+            //groupRef.current.rotateX(-Math.PI);
             box.setFromObject(groupRef.current)
             box.getCenter(mapCenter)
             groupRef.current.position.sub(mapCenter)// 將 group 移動，讓中心在 (0,0,0)
             camera.lookAt(mapCenter);
+            //x:776.8 , y:-321.1 , z:496
+            // x: 656.102783203125, y: 474.7301025390625, z: -7.5
+            console.log('mapCenter',mapCenter);
             camera.position.z = 850;
-            
         }
          return ()=>{
             EffectRan.current = true;
         }
        
     },[])
+    
     return (
         <>
-             <DataSelector setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } /> 
+             {/* <DataSelector setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } />  */}
+             {/* <Html as="div"
+                fullscreen
+                style={{
+                    left:0,
+                    transform: 'translate(-45%, 40%)'
+                }}
+                prepend={true}>
+                <button className="bg-amber-50 p-5 " onClick={()=>{setAnimating(true)}}>
+                    start animate
+                </button>
+             </Html> */}
+             <PowerAreaDropdownSelector
+                selectList={taiwanPower.data}
+                currentSelect={currentAreaData}  
+                setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } />
              <group ref={groupRef}>
                 {
                     powerData.map((data,i)=> (

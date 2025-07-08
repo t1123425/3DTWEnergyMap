@@ -2,7 +2,7 @@ import { useLoader } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type FC } from 'react';
 import type { Mesh } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-
+import { useGLTF } from '@react-three/drei'
 type Props = {
     position:number[];
 }
@@ -31,7 +31,7 @@ type ModelProps = {
 }
 export const OLBModel:FC<ModelProps> = ({path,rotateX,scale}) => {
     const primitiveRef = useRef<Mesh|null>(null);
-    const {scene} = useLoader(GLTFLoader,path);
+    const {scene} = useGLTF(path);
     const cloneScene = useMemo(()=> scene.clone(),[scene]);
     useEffect(()=>{
         if(primitiveRef.current && rotateX){
