@@ -1,37 +1,36 @@
 import { useThree } from "@react-three/fiber";
 import { useRef,useEffect,useMemo, type FC, useState } from "react"
 import { Group} from 'three'
-// import { mainStore } from "../../../store";
 import { type SVGResult } from "three/examples/jsm/Addons.js";
 import Area from "../area";
 import * as THREE from "three";
 import RenewableEnergyStation from  '../../../json/RenewableEnergyStation.json'
 import { mainStore } from "../../../store";
-import { RnewEnegryTypeTabs } from "../../widgets";
-import { type EnegryTypesData } from "../../../utils/types";
+// import { RnewEnergyTypeTabs } from "../../widgets";
+//import { type EnergyTypesData } from "../../../utils/types";
 
 const mapCenter = new THREE.Vector3()
 type RenewMapProps = {
     svgData:SVGResult
 }
 /**(能源別\/Type of Energy)
- * EnegryType:
+ * EnergyType:
  * Wind
  * Solar
  * Geothermal
  * 
  */
-const EnegryTypes:EnegryTypesData[] = [{
-    name:'風力',
-    type:'Wind'
-},{
-    name:'太陽能',
-    type:'Solar'
-},{
-    name:'地熱能',
-    type:'Geothermal'
-}];
-const EnegryTypeKey =  "能源別\/Type of Energy";
+// const EnergyTypes:EnergyTypesData[] = [{
+//     name:'風力',
+//     type:'Wind'
+// },{
+//     name:'太陽能',
+//     type:'Solar'
+// },{
+//     name:'地熱能',
+//     type:'Geothermal'
+// }];
+const EnergyTypeKey =  "能源別\/Type of Energy";
 const addressTypeKey = "地址\/Address";
 const nameKey = "發電站名稱\/Name of The Power Station";
 
@@ -42,36 +41,38 @@ const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
     const {camera } = useThree();
     const box = new THREE.Box3();
     const taiwanGIS = mainStore(state => state.taiwanGIS);
-    const [enegryType,setEnegryType] = useState(EnegryTypes[0].type)
+    const initalCityDataArray = mainStore(state => state.initalCityDataArray);
+    const energyType = mainStore(state => state.energyType);
+    //const [EnergyType,setEnergyType] = useState(EnergyTypes[0].type)
 
     const renewEnergyData = useMemo(()=>{
-        const selectedEnegryStations = RenewableEnergyStation.filter(e => e[EnegryTypeKey].includes(enegryType))
+        const selectedEnergyStations = RenewableEnergyStation.filter(e => e[EnergyTypeKey].includes(energyType))
         return svgData.paths.map((path)=>{
             //找出地圖上各gis
             const gis = taiwanGIS.find(e => e.cityId === path.userData?.node.id)
-            const selectedEnegryStation = selectedEnegryStations.find(e => gis?.ch_name?e[addressTypeKey].includes(gis?.ch_name):'')
+            const selectedEnergyStation = selectedEnergyStations.find(e => gis?.ch_name?e[addressTypeKey].includes(gis?.ch_name):'')
 
             let ShowInfoType = ''
             let infolist:string[] = [];
             let isShowModel = false;
-            if(path.userData?.node.nodeName === 'path' && selectedEnegryStation){
-                ShowInfoType = 'renew'+enegryType
-                infolist = [selectedEnegryStation[nameKey]];
-                isShowModel = selectedEnegryStation?true:false;
+            const cityData = {
+                name:gis?.ch_name ?? '',
+                cityId:gis?.cityId ?? ''
+            }
+            if(path.userData?.node.nodeName === 'path' && selectedEnergyStation){
+                ShowInfoType = 'renew'+energyType
+                infolist = [selectedEnergyStation[nameKey]];
+                isShowModel = selectedEnergyStation?true:false;
             }
             return {
                 shape:path,
                 ShowInfoType,
                 isShowModel,
-                infolist
+                infolist,
+                cityData
             }
         })
-    },[svgData,taiwanGIS,enegryType])
-    // const getPowerGen = useCallback(()=>{
-    //     fetch('../json/gis_with_area_and_ch_name.json').then(res => res.json()).then(data => {
-    //         console.log('data',data);
-    //     })
-    // },[]);
+    },[svgData,taiwanGIS,energyType])
  
     useEffect(()=>{
         if(EffectRan.current && groupRef.current){
@@ -82,7 +83,7 @@ const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
             groupRef.current.position.sub(mapCenter)// 將 group 移動，讓中心在 (0,0,0)
             camera.lookAt(mapCenter);
             camera.position.z = 850;
-            
+            initalCityDataArray();
         }
          return ()=>{
             EffectRan.current = true;
@@ -92,7 +93,7 @@ const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
 
     return (
         <>
-            <RnewEnegryTypeTabs enegryType={enegryType} EnegryTypes={EnegryTypes} setSelectorType={(e)=> {setEnegryType(e)}} />
+            {/* <RnewEnergyTypeTabs EnergyType={EnergyType} EnergyTypes={EnergyTypes} setSelectorType={(e)=> {setEnergyType(e)}} /> */}
             <group ref={groupRef} >
                 {
                     renewEnergyData.map((data,i)=> (
@@ -100,7 +101,8 @@ const RenewEnegryMap:FC<RenewMapProps> = ({svgData}) => {
                             shape={data.shape}
                             ShowInfoType={data.ShowInfoType}
                             isShowModel={data.isShowModel}
-                            infoList={data.infolist} />
+                            infoList={data.infolist}
+                            cityData={data.cityData} />
                     ))
                 }
             </group> 

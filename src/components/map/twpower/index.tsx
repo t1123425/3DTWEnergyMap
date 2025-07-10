@@ -29,13 +29,13 @@ const mapCenter = new THREE.Vector3()
 const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
     const [currentAreaData,setCurrentAreaData] = useState(taiwanPower.data[0])
     const taiwanGIS = mainStore(state => state.taiwanGIS);
-    // const zoomInVectors = mainStore(state => state.zoomInVectors);
     // const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
     const groupRef = useRef<Group| null>(null);
     const EffectRan = useRef(false);
     const {camera } = useThree();
     const box = new THREE.Box3();
+    const initalCityDataArray = mainStore(state => state.initalCityDataArray);
     //const [animating, setAnimating] = useState(false)
     const powerData = useMemo(()=>{
         
@@ -48,6 +48,10 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
             const isHover = currentAreaData.area === gis?.area;
             let ShowInfoType = ''
             let infolist:string[] = [];
+            const cityData = {
+                name:gis?.ch_name ?? '',
+                cityId:gis?.cityId ?? ''
+            }
             // 用電量預設選擇
             if((gis?.cityId === 'TWTPE' || 
                gis?.cityId === 'TWTXG' || 
@@ -63,27 +67,13 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
                     areaColor,
                     isHover,
                     ShowInfoType,
-                    infolist
+                    infolist,
+                    cityData
                 }
             
         })
     },[svgData,currentAreaData,taiwanGIS]) 
-    // const targetPos = useMemo(()=>{
-    //     const areaIndex = taiwanPower.data.findIndex(e => e.area === currentAreaData.area)
-    //     // zoomInVectors 0:中部 1:南部 2:東部 3:北部
-    //     if(zoomInVectors.length){
-    //         const textVector = [
-    //             new THREE.Vector3(zoomInVectors[3].x,-zoomInVectors[3].y,0),
-    //             new THREE.Vector3(zoomInVectors[0].x,-zoomInVectors[0].y,0),
-    //             new THREE.Vector3(zoomInVectors[1].x,-(zoomInVectors[1].y*2),0),
-    //             new THREE.Vector3(zoomInVectors[2].x,-zoomInVectors[2].y,0),
-    //         ]
-    //         return textVector[areaIndex];
-    //     }else{
-    //         return new THREE.Vector3();
-    //     }
-       
-    // },[currentAreaData,zoomInVectors])
+    
     // useFrame(()=>{
     //     if(EffectRan.current && groupRef.current && controlsRef.current && animating){
     //         const targetCameraPos = new THREE.Vector3(0,200,400)
@@ -109,10 +99,9 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
             box.getCenter(mapCenter)
             groupRef.current.position.sub(mapCenter)// 將 group 移動，讓中心在 (0,0,0)
             camera.lookAt(mapCenter);
-            //x:776.8 , y:-321.1 , z:496
-            // x: 656.102783203125, y: 474.7301025390625, z: -7.5
-            console.log('mapCenter',mapCenter);
+            console.log('mapcenter',mapCenter);
             camera.position.z = 850;
+            initalCityDataArray();
         }
          return ()=>{
             EffectRan.current = true;
@@ -146,7 +135,8 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
                                 areaColor={data.areaColor}
                                 isHover={data.isHover}
                                 ShowInfoType={data.ShowInfoType}
-                                infoList={data.infolist}  />
+                                infoList={data.infolist}
+                                cityData={data.cityData}  />
                     ))
                 }
             </group>

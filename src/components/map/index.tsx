@@ -1,5 +1,5 @@
 import { useLoader,useFrame, useThree } from "@react-three/fiber";
-import { useRef,useEffect,useMemo,useState } from "react"
+import { useRef,useEffect } from "react"
 import {DirectionalLight} from 'three'
 import { SVGLoader } from "three/examples/jsm/Addons.js";
 import TaiwanMapSVG from '../../assets/tw.svg';
@@ -50,50 +50,48 @@ const DirectLight = () => {
 const Map = () => {
     const svgData = useLoader(SVGLoader,TaiwanMapSVG)
     const mapMode = mainStore((state)=> state.mapMode);
-    const zoomInVectors = mainStore(state => state.zoomInVectors);
+    //const reNewEnegryStations = mainStore(state => state.mapCityDataArray);
+    const currentSelectCity = mainStore(state => state.currentSelectCity)
     const controlsRef = useRef<OrbitControlsImpl | null>(null);
-    const [animating, setAnimating] = useState(false)
+    //const [animating, setAnimating] = useState(false)
     const {camera } = useThree();
-    const targetPos = useMemo(()=>{
+    // const targetPos = useMemo(()=>{
+    //     console.log('reNewEnegryStations',reNewEnegryStations)
+    //     if(reNewEnegryStations.length){
+    //         const posX = reNewEnegryStations[2].pos.x;
+    //         const posY = reNewEnegryStations[2].pos.y;
+    //         return new THREE.Vector3(posX ,posY,400)
+    //     }else{
+    //         return new THREE.Vector3();
+    //     }
+
         
-        // zoomInVectors 0:中部 1:南部 2:東部 3:北部
-        if(zoomInVectors.length){
-            const Vector = [
-                new THREE.Vector3(zoomInVectors[3].x,-zoomInVectors[3].y,0),
-                new THREE.Vector3(zoomInVectors[0].x,-zoomInVectors[0].y,0),
-                new THREE.Vector3(zoomInVectors[1].x,-(zoomInVectors[1].y*2),0),
-                new THREE.Vector3(zoomInVectors[2].x,-zoomInVectors[2].y,0),
-            ]
-            return Vector[0];
-        }else{
-            return new THREE.Vector3();
-        }
-       
-    },[zoomInVectors])
+    // },[currentSelectCity])
     useFrame(()=>{
-        if(animating && controlsRef.current){
-             const targetCameraPos = new THREE.Vector3(0,200,400)
+        if(currentSelectCity){
+            const targetCameraPos = currentSelectCity.pos.clone().add(new THREE.Vector3(0,0,400));
             camera.position.lerp(targetCameraPos,0.05)
 
-            controlsRef.current.target.lerp(targetPos,0.05);
-            controlsRef.current.update()
+            // controlsRef.current.target.lerp(targetPos,0.05);
+            // controlsRef.current.update()
             // 始終朝向目標地區
-            camera.lookAt(targetPos);
-            const distance = camera.position.distanceTo(targetCameraPos)
-            if(distance < 1){
-                console.log('stop aniamte and show targetPos',targetPos);
-                setAnimating(false)
-            }
+            camera.lookAt(currentSelectCity.pos);
+            // const distance = camera.position.distanceTo(targetCameraPos)
+            // if(distance < 1){
+            //     setAnimating(false)
+            // }
         }
     })
     return (
           <>
-            <OrbitControls ref={controlsRef} />
+            <OrbitControls ref={controlsRef} enableZoom={false} />
             {
                 mapMode === 'twp' && <TWPowerMap svgData={svgData} />
             }
             {
-                mapMode === 'rnest' && <RenewEnegryMap svgData={svgData} />
+                mapMode === 'rnest' && (
+                    <RenewEnegryMap svgData={svgData} />
+                )
             }
             <ambientLight color={0xffffff} intensity={0.8} /> 
             <DirectLight />

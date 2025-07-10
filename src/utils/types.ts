@@ -1,7 +1,7 @@
 export type PowerData = {
     date:string,
     area:string,
-    areaName?:string,
+    areaName:string,
     powerGen: string,
     powerConsumption: string
 }

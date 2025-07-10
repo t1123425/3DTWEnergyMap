@@ -2,12 +2,17 @@ import {  useEffect, useMemo, useRef, Suspense,type FC } from "react"
 import type { SVGResultPaths } from "three/examples/jsm/Addons.js"
 import { Edges } from '@react-three/drei';
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame,useThree } from "@react-three/fiber";
 import FloatInfoBlock from "../../floatInfoBlock";
 import { OLBModel } from "../3dModel";
-//import { mainStore } from "../../../store";
+import { mainStore } from "../../../store";
+type CityData = {
+    name: string,
+    cityId: string
+}
 type AreaProp = {
     shape:SVGResultPaths,
+    cityData:CityData,
     areaColor?:string,
     ShowInfoType?:string,
     infoList?:string[],
@@ -18,11 +23,14 @@ type AreaProp = {
 const defaultsVector = new THREE.Vector3(1,1,1);
 const targetScale = new THREE.Vector3(1,1,2)
 const alpha:number = 0.3;
-const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShowModel}) => {
+const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoList,isShowModel}) => {
     const areaRef = useRef<THREE.Mesh|null>(null);
     const insideMeshRef = useRef<THREE.Mesh|null>(null);
     const EffectRan = useRef(false);
-    //const updateVectorArray = mainStore((state) => state.updateVectorArray)
+    const isUpdateCityDataRef = useRef(true);
+    //const {camera } = useThree();
+    //const mapCityDataArray = mainStore(state=> state.mapCityDataArray);
+    const updateCityDataArray = mainStore(state => state.updateCityDataArray);
     const renderInfoContent = useMemo(()=> {
         if(ShowInfoType === 'power'){
             return (
@@ -53,10 +61,10 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShow
         if(EffectRan.current && areaRef.current && insideMeshRef.current){
             const box = new THREE.Box3().setFromObject(areaRef.current);
             const center = box.getCenter(new THREE.Vector3());
-            if(insideMeshRef.current){
-                //console.log('center',center);
-                insideMeshRef.current.position.set(center.x,center.y,center.z);
-            }
+            // if(isHover && ShowInfoType === 'power'){
+            //     console.log('mount center',center);
+            // }
+            insideMeshRef.current.position.set(center.x,center.y,center.z);
         }
         return ()=>{
             EffectRan.current = true;
@@ -65,7 +73,34 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShow
 
     useFrame(()=>{
         if(areaRef.current){
-            areaRef.current.scale.lerp(isHover?targetScale:defaultsVector,alpha);
+          areaRef.current.scale.lerp(isHover?targetScale:defaultsVector,alpha);
+          if(isUpdateCityDataRef.current && shape.userData?.node.nodeName === 'path'){
+            const box = new THREE.Box3().setFromObject(areaRef.current);
+            const center = box.getCenter(new THREE.Vector3());
+             const stationData = {
+                    city:cityData.name,
+                    cityId:cityData.cityId,
+                    pos:center
+                }
+            updateCityDataArray(stationData)
+            isUpdateCityDataRef.current = false
+          }
+        //   if(isHover && ShowInfoType === 'power'){
+        //         const box = new THREE.Box3().setFromObject(areaRef.current);
+        //         const center = box.getCenter(new THREE.Vector3());
+        //         //console.log('frame center',center);
+        //         if(centerRef.current){
+        //             const cameraOffset = new THREE.Vector3(0, 0, 400); 
+        //             const targetCameraPos = center.clone().add(cameraOffset);
+        //             camera.position.lerp(targetCameraPos, 0.05); // 動畫效果
+        //             camera.lookAt(center);  
+        //         }else{
+        //             //console.log('frame center',center);
+        //             centerRef.current = center;
+        //         }
+                
+                
+        //    }
             // const material = areaRef.current.material as THREE.MeshStandardMaterial
             // material.color.set(hoverCheck?'orange':shape.color)
         }
@@ -81,6 +116,7 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShow
                 <Edges lineWidth={1} threshold={15} color={'#fff'} />
             </mesh>
              <mesh ref={insideMeshRef} >
+                {/* <axesHelper scale={150} /> */}
                 {
                     ShowInfoType === 'power' && isHover && (
 
@@ -99,7 +135,7 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,ShowInfoType,infoList,isShow
                             <Suspense fallback={null}>
                                 {/* 在3d model元件外層添加<group key={...}> 用於讓react diff更好判定模組更新，當要切換不同3d模型時會更好判定處理 */}
                                 <group key={ShowInfoType}>
-                                    <OLBModel path={'./GLBs/'+ShowInfoType+'.glb'} rotateX={-Math.PI/4} scale={ShowInfoType === 'renewGeothermal'?0.3:1} />
+                                    <OLBModel path={'./GLBs/'+ShowInfoType+'.glb'} rotateX={-Math.PI/4} scale={ShowInfoType === 'renewGeothermal'?0.5:1.5} />
                                 </group>
                             </Suspense>
                             <FloatInfoBlock >

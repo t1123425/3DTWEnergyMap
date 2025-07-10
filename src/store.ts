@@ -1,11 +1,19 @@
 import { create } from 'zustand';
 import { taiwanGis } from './utils/GIS';
+import  { type PowerData } from './utils/types';
 import * as THREE from "three";
+
 interface GISData{
     cityId:string,
     name:string,
     ch_name:string,
     area:string,
+}
+
+interface MapCityData {
+    cityId:string,
+    city:string,
+    pos:THREE.Vector3
 }
 
 /**
@@ -17,19 +25,30 @@ interface GISData{
 interface state {
     taiwanGIS:GISData[],
     mapMode:string,
-    zoomInVector:THREE.Vector2 | null
-    zoomInVectors:THREE.Vector3[]
+    energyType:string,
+    currentAreaData:PowerData | null,
+    currentSelectCity:MapCityData | null,
+    mapCityDataArray:MapCityData[],
     updateMapMode: (mode:string) => void
-    updateVector: (vector:THREE.Vector2) => void,
-    updateVectorArray: (vector:THREE.Vector3) => void,
+    setEnergyType:(type:string) => void,
+    setCurrentSelectCity: (city:MapCityData | null) => void
+    setCurrentAreaData: (data:PowerData) => void
+    initalCityDataArray:() => void
+    updateCityDataArray: (city:MapCityData) => void,
 }
 
 export const mainStore = create<state>()((set)=>({
     taiwanGIS:taiwanGis,
     mapMode:'twp',
-    zoomInVector: null,
+    energyType:'Wind',
+    currentAreaData:null,
+    currentSelectCity: null,
+    mapCityDataArray:[],
     zoomInVectors:[],
     updateMapMode: (mode) => set(()=> ({mapMode:mode})),
-    updateVector: (vector) => set(()=> ({zoomInVector:vector})),
-    updateVectorArray:(vector) => set((state)=> ({zoomInVectors:[...state.zoomInVectors,vector]}))
+    setEnergyType: (type) => set(()=> ({energyType:type})),
+    setCurrentSelectCity: (data) => set(()=> ({currentSelectCity:data})),
+    setCurrentAreaData:(data) => set(()=> ({currentAreaData:data})),
+    initalCityDataArray:()=> set(()=>({mapCityDataArray:[]})),
+    updateCityDataArray:(city) => set((state)=> ({mapCityDataArray:[...state.mapCityDataArray,city]})),
 }))
