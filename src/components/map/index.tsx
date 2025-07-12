@@ -52,6 +52,7 @@ const Map = () => {
     const mapMode = mainStore((state)=> state.mapMode);
     //const reNewEnegryStations = mainStore(state => state.mapCityDataArray);
     const currentSelectCity = mainStore(state => state.currentSelectCity)
+    const setCurrentSelectCity = mainStore(state => state.setCurrentSelectCity);
     const controlsRef = useRef<OrbitControlsImpl | null>(null);
     //const [animating, setAnimating] = useState(false)
     const {camera } = useThree();
@@ -68,18 +69,19 @@ const Map = () => {
         
     // },[currentSelectCity])
     useFrame(()=>{
-        if(currentSelectCity){
-            const targetCameraPos = currentSelectCity.pos.clone().add(new THREE.Vector3(0,0,400));
+        if(currentSelectCity && controlsRef.current){
+            const targetCameraPos = currentSelectCity.pos.clone().add(new THREE.Vector3(0,0,300));
             camera.position.lerp(targetCameraPos,0.05)
 
-            // controlsRef.current.target.lerp(targetPos,0.05);
-            // controlsRef.current.update()
+            controlsRef.current.target.lerp(targetCameraPos,0.05);
+            controlsRef.current.update()
             // 始終朝向目標地區
             camera.lookAt(currentSelectCity.pos);
-            // const distance = camera.position.distanceTo(targetCameraPos)
-            // if(distance < 1){
-            //     setAnimating(false)
-            // }
+            const distance = camera.position.distanceTo(targetCameraPos)
+            if(distance < 1){
+                //setAnimating(false)
+                setCurrentSelectCity(null);
+            }
         }
     })
     return (

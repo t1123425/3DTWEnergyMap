@@ -16,6 +16,11 @@ interface MapCityData {
     pos:THREE.Vector3
 }
 
+interface targetInfo {
+    cityId:string,
+    info:string
+}
+
 /**
  * map-mode
  * TWPower = twp
@@ -28,10 +33,12 @@ interface state {
     energyType:string,
     currentAreaData:PowerData | null,
     currentSelectCity:MapCityData | null,
+    currentTargetInfo:targetInfo | null,
     mapCityDataArray:MapCityData[],
     updateMapMode: (mode:string) => void
     setEnergyType:(type:string) => void,
     setCurrentSelectCity: (city:MapCityData | null) => void
+    setCurrentTargetInfo: (info:targetInfo) => void,
     setCurrentAreaData: (data:PowerData) => void
     initalCityDataArray:() => void
     updateCityDataArray: (city:MapCityData) => void,
@@ -43,11 +50,13 @@ export const mainStore = create<state>()((set)=>({
     energyType:'Wind',
     currentAreaData:null,
     currentSelectCity: null,
+    currentTargetInfo:null,
     mapCityDataArray:[],
     zoomInVectors:[],
     updateMapMode: (mode) => set(()=> ({mapMode:mode})),
     setEnergyType: (type) => set(()=> ({energyType:type})),
     setCurrentSelectCity: (data) => set(()=> ({currentSelectCity:data})),
+    setCurrentTargetInfo: (info) => set(()=>({currentTargetInfo:info})),
     setCurrentAreaData:(data) => set(()=> ({currentAreaData:data})),
     initalCityDataArray:()=> set(()=>({mapCityDataArray:[]})),
     updateCityDataArray:(city) => set((state)=> ({mapCityDataArray:[...state.mapCityDataArray,city]})),

@@ -2,7 +2,7 @@ import {  useEffect, useMemo, useRef, Suspense,type FC } from "react"
 import type { SVGResultPaths } from "three/examples/jsm/Addons.js"
 import { Edges } from '@react-three/drei';
 import * as THREE from "three";
-import { useFrame,useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import FloatInfoBlock from "../../floatInfoBlock";
 import { OLBModel } from "../3dModel";
 import { mainStore } from "../../../store";
@@ -34,7 +34,7 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
     const renderInfoContent = useMemo(()=> {
         if(ShowInfoType === 'power'){
             return (
-                <div className=" bg-amber-50 p-4 rounded-2xl border border-black">
+                <div className=" bg-amber-50 p-2 rounded-2xl border border-black" style={{minWidth:250}}>
                     {
                         infoList?.length && (
                             <ul className="mt-1">
@@ -46,14 +46,18 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
                     }
                 </div>)
         }else if(ShowInfoType?.includes('renew')){
-            return <div className="info text-white" >{infoList?.length && infoList.map((e,i) => <p key={i}>{e}</p>)}</div>
+            return (
+                <div className="info text-white" style={{minWidth:300}}>
+                    {infoList?.length?infoList.map((e,i) => 
+                        <p key={i}>{e}</p>):null}
+                </div>)
         }else{
             return null
         }
     },[ShowInfoType,infoList])
 
     const material = useMemo(()=>{
-        return new THREE.MeshStandardMaterial({ color: isHover ? areaColor : shape.color ,side:THREE.BackSide})
+        return new THREE.MeshStandardMaterial({ color: isHover ? areaColor : (areaColor ?? shape.color) ,side:THREE.BackSide})
     },[areaColor,shape,isHover])
 
 
@@ -61,16 +65,21 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
         if(EffectRan.current && areaRef.current && insideMeshRef.current){
             const box = new THREE.Box3().setFromObject(areaRef.current);
             const center = box.getCenter(new THREE.Vector3());
-            // if(isHover && ShowInfoType === 'power'){
-            //     console.log('mount center',center);
-            // }
             insideMeshRef.current.position.set(center.x,center.y,center.z);
         }
         return ()=>{
             EffectRan.current = true;
         }
     },[])
-
+    const modelScaleDetect = () => {
+        if(ShowInfoType === 'renewGeothermal'){
+            return 0.5;
+        }else if(ShowInfoType === 'renewSolar'){
+            return 3;
+        }else{
+            return 1.5;
+        }
+    }
     useFrame(()=>{
         if(areaRef.current){
           areaRef.current.scale.lerp(isHover?targetScale:defaultsVector,alpha);
@@ -135,7 +144,7 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
                             <Suspense fallback={null}>
                                 {/* 在3d model元件外層添加<group key={...}> 用於讓react diff更好判定模組更新，當要切換不同3d模型時會更好判定處理 */}
                                 <group key={ShowInfoType}>
-                                    <OLBModel path={'./GLBs/'+ShowInfoType+'.glb'} rotateX={-Math.PI/4} scale={ShowInfoType === 'renewGeothermal'?0.5:1.5} />
+                                    <OLBModel path={'./GLBs/'+ShowInfoType+'.glb'} rotateX={-Math.PI/4} scale={modelScaleDetect()} />
                                 </group>
                             </Suspense>
                             <FloatInfoBlock >

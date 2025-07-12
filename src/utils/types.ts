@@ -6,7 +6,7 @@ export type PowerData = {
     powerConsumption: string
 }
 
-export type EnegryTypesData = {
+export type EnergyTypesData = {
     type:string,
     name:string
 }

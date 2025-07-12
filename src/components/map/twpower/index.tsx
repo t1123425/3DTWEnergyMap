@@ -36,6 +36,7 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
     const {camera } = useThree();
     const box = new THREE.Box3();
     const initalCityDataArray = mainStore(state => state.initalCityDataArray);
+    const setCurrentSelectCity = mainStore(state => state.setCurrentSelectCity)
     //const [animating, setAnimating] = useState(false)
     const powerData = useMemo(()=>{
         
@@ -43,7 +44,7 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
             //找出地圖上各gis
             const gis = taiwanGIS.find(e => e.cityId === path.userData?.node.id)
             //設定選出區域顏色
-            const areaColor = gis?.area ? colorObj[gis.area] : '';
+            let areaColor = gis?.area ? colorObj[gis.area] : '';
             //確認已被選取區域
             const isHover = currentAreaData.area === gis?.area;
             let ShowInfoType = ''
@@ -59,8 +60,22 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
                gis?.cityId === 'TWHUA' ) && path.userData?.node.nodeName === 'path'){
              
                 const getTaiwanPowerData = taiwanPower.data.find(e => gis?.area === e.area)
+                const rawDate = getTaiwanPowerData?.date;
+                areaColor = gis?.area ? colorObj[gis.area] : '';
+                let dataDate = ''
+                if(rawDate){
+                    const year = rawDate.slice(0, 4);
+                    const month = rawDate.slice(4, 6);
+                    const day = rawDate.slice(6, 8);
+                    dataDate = year+'-'+month+'-'+day;
+                }
+                
                 ShowInfoType = 'power'
-                infolist = ['發電量:'+getTaiwanPowerData?.powerGen,'用電量:'+getTaiwanPowerData?.powerConsumption]
+
+                infolist = [
+                    '統計時間:'+ dataDate,
+                    '發電量:'+getTaiwanPowerData?.powerGen,
+                    '用電量:'+getTaiwanPowerData?.powerConsumption]
             }
              return {
                     shape:path,
@@ -99,9 +114,14 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
             box.getCenter(mapCenter)
             groupRef.current.position.sub(mapCenter)// 將 group 移動，讓中心在 (0,0,0)
             camera.lookAt(mapCenter);
-            console.log('mapcenter',mapCenter);
-            camera.position.z = 850;
+            const defaultCityData = {
+                cityId:'',
+                city:'',
+                pos:new THREE.Vector3(0,3,450),
+            }
+            //camera.position.z = 850;
             initalCityDataArray();
+            setCurrentSelectCity(defaultCityData);
         }
          return ()=>{
             EffectRan.current = true;
@@ -111,18 +131,6 @@ const TWPowerMap:FC<PowerMapProp> = ({svgData}) => {
     
     return (
         <>
-             {/* <DataSelector setSelectorData={(data:PowerData)=> {setCurrentAreaData({...data})} } />  */}
-             {/* <Html as="div"
-                fullscreen
-                style={{
-                    left:0,
-                    transform: 'translate(-45%, 40%)'
-                }}
-                prepend={true}>
-                <button className="bg-amber-50 p-5 " onClick={()=>{setAnimating(true)}}>
-                    start animate
-                </button>
-             </Html> */}
              <PowerAreaDropdownSelector
                 selectList={taiwanPower.data}
                 currentSelect={currentAreaData}  
