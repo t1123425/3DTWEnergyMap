@@ -38,9 +38,8 @@ const RenewEnergyMap:FC<RenewMapProps> = ({svgData}) => {
     const energyType = mainStore(state => state.energyType);
 
     const renewEnergyData = useMemo(()=>{
+        console.log('renew');
         const selectedEnergyStations = RenewableEnergyStation.filter(e => e[EnergyTypeKey].includes(energyType))
-        //console.log('selectedEnergyStations',selectedEnergyStations);
-        //console.log('currentSelectCity',currentSelectCity);
         return svgData.paths.map((path)=>{
             //找出地圖上各gis
             const gis = taiwanGIS.find(e => e.cityId === path.userData?.node.id)
@@ -56,11 +55,9 @@ const RenewEnergyMap:FC<RenewMapProps> = ({svgData}) => {
             }
             if(path.userData?.node.nodeName === 'path' && selectedEnergyStation){
                 ShowInfoType = 'renew'+energyType
-                //infolist = [selectedEnergyStation[nameKey]];
                 isShowModel = true;
             }
             if(currentSelectStation && currentTargetInfo?.cityId === path.userData?.node.id){
-                // console.log('currentSelectStation',currentSelectStation);
                 areaColor = 'lightgreen';
                 infolist = ['發電站名稱: '+currentSelectStation[nameKey],
                             '場址說明: '+currentSelectStation[descriptionKey],
@@ -86,12 +83,13 @@ const RenewEnergyMap:FC<RenewMapProps> = ({svgData}) => {
             box.getCenter(mapCenter)
             groupRef.current.position.sub(mapCenter)// 將 group 移動，讓中心在 (0,0,0)
             camera.lookAt(mapCenter);
-           const defaultCityData = {
+            //camera.position.z = 850;
+            const defaultCityData = {
                 cityId:'',
                 city:'',
                 pos:new THREE.Vector3(0,3,450),
             }
-            //camera.position.z = 850;
+            
             initalCityDataArray();
             setCurrentSelectCity(defaultCityData);
             // console.log('camera pos',camera.position);

@@ -1,10 +1,11 @@
-import {  useEffect, useMemo, useRef, Suspense,type FC } from "react"
+import {  useEffect, useMemo, useRef, Suspense,type FC,forwardRef } from "react"
 import type { SVGResultPaths } from "three/examples/jsm/Addons.js"
 import { Edges } from '@react-three/drei';
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import FloatInfoBlock from "../../floatInfoBlock";
 import { OLBModel } from "../3dModel";
+import { Mesh } from 'three';
 import { mainStore } from "../../../store";
 type CityData = {
     name: string,
@@ -23,7 +24,7 @@ type AreaProp = {
 const defaultsVector = new THREE.Vector3(1,1,1);
 const targetScale = new THREE.Vector3(1,1,2)
 const alpha:number = 0.3;
-const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoList,isShowModel}) => {
+const Area = forwardRef<Mesh,AreaProp>(({shape,areaColor,isHover,cityData,ShowInfoType,infoList,isShowModel}, ref) => {
     const areaRef = useRef<THREE.Mesh|null>(null);
     const insideMeshRef = useRef<THREE.Mesh|null>(null);
     const EffectRan = useRef(false);
@@ -34,7 +35,7 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
     const renderInfoContent = useMemo(()=> {
         if(ShowInfoType === 'power'){
             return (
-                <div className=" bg-amber-50 p-2 rounded-2xl border border-black" style={{minWidth:250}}>
+                <div className=" bg-amber-50 p-2 rounded-2xl border border-black" style={{minWidth:185}}>
                     {
                         infoList?.length && (
                             <ul className="mt-1">
@@ -82,40 +83,27 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
     }
     useFrame(()=>{
         if(areaRef.current){
+         
           areaRef.current.scale.lerp(isHover?targetScale:defaultsVector,alpha);
+
           if(isUpdateCityDataRef.current && shape.userData?.node.nodeName === 'path'){
-            const box = new THREE.Box3().setFromObject(areaRef.current);
-            const center = box.getCenter(new THREE.Vector3());
+             const box = new THREE.Box3().setFromObject(areaRef.current);
+             const center = box.getCenter(new THREE.Vector3());
+            //const center = box.getCenter(new THREE.Vector3());
              const stationData = {
-                    city:cityData.name,
-                    cityId:cityData.cityId,
-                    pos:center
-                }
+                city:cityData.name,
+                cityId:cityData.cityId,
+                pos:center
+            }
+            //console.log('center',center);
             updateCityDataArray(stationData)
             isUpdateCityDataRef.current = false
-          }
-        //   if(isHover && ShowInfoType === 'power'){
-        //         const box = new THREE.Box3().setFromObject(areaRef.current);
-        //         const center = box.getCenter(new THREE.Vector3());
-        //         //console.log('frame center',center);
-        //         if(centerRef.current){
-        //             const cameraOffset = new THREE.Vector3(0, 0, 400); 
-        //             const targetCameraPos = center.clone().add(cameraOffset);
-        //             camera.position.lerp(targetCameraPos, 0.05); // 動畫效果
-        //             camera.lookAt(center);  
-        //         }else{
-        //             //console.log('frame center',center);
-        //             centerRef.current = center;
-        //         }
-                
-                
-        //    }
-            // const material = areaRef.current.material as THREE.MeshStandardMaterial
-            // material.color.set(hoverCheck?'orange':shape.color)
+           }
         }
     })
     return (
         <>
+            {/* areaRef */}
              <mesh ref={areaRef}
                 material={material}
                 >
@@ -159,6 +147,6 @@ const Area:FC<AreaProp> = ({shape,areaColor,isHover,cityData,ShowInfoType,infoLi
         </>
        
     )
-}
+});
 
 export default Area 

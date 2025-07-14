@@ -32,6 +32,7 @@ interface state {
     mapMode:string,
     energyType:string,
     currentAreaData:PowerData | null,
+    powerDataArray:PowerData[],
     currentSelectCity:MapCityData | null,
     currentTargetInfo:targetInfo | null,
     mapCityDataArray:MapCityData[],
@@ -40,7 +41,8 @@ interface state {
     setCurrentSelectCity: (city:MapCityData | null) => void
     setCurrentTargetInfo: (info:targetInfo) => void,
     setCurrentAreaData: (data:PowerData) => void
-    initalCityDataArray:() => void
+    initalCityDataArray:() => void,
+    updatePowerDataArray:(array:PowerData[]) => void,
     updateCityDataArray: (city:MapCityData) => void,
 }
 
@@ -49,6 +51,7 @@ export const mainStore = create<state>()((set)=>({
     mapMode:'twp',
     energyType:'Wind',
     currentAreaData:null,
+    powerDataArray:[],
     currentSelectCity: null,
     currentTargetInfo:null,
     mapCityDataArray:[],
@@ -59,5 +62,6 @@ export const mainStore = create<state>()((set)=>({
     setCurrentTargetInfo: (info) => set(()=>({currentTargetInfo:info})),
     setCurrentAreaData:(data) => set(()=> ({currentAreaData:data})),
     initalCityDataArray:()=> set(()=>({mapCityDataArray:[]})),
+    updatePowerDataArray:(array) => set(()=>({powerDataArray:[...array]})),
     updateCityDataArray:(city) => set((state)=> ({mapCityDataArray:[...state.mapCityDataArray,city]})),
 }))

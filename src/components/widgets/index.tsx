@@ -1,55 +1,53 @@
 import { useMemo, useState, type FC } from "react";
-import type { PowerData, EnergyTypesData } from "../../utils/types";
-import { Html } from "@react-three/drei";
+import type { EnergyTypesData } from "../../utils/types";
 import { mainStore } from "../../store";
 import RenewableEnergyStation from '../../json/RenewableEnergyStation.json';
 import * as THREE from "three";
-type SelectorProp = {
-    selectList:PowerData[],
-    currentSelect:PowerData,
-    setSelectorData: (value: PowerData) => void
-}
-export const PowerAreaDropdownSelector:FC<SelectorProp> = ({selectList,currentSelect,setSelectorData}) => {
+
+export const PowerAreaDropdownSelector:FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const currentAreaData = mainStore(state=> state.currentAreaData);
+  const setCurrentAreaData = mainStore(state => state.setCurrentAreaData);
+  const powerDataArray = mainStore(state => state.powerDataArray);
+  const mapCityDataArray = mainStore(state => state.mapCityDataArray);
+  const taiwanGIS = mainStore(state => state.taiwanGIS);
+  const setCurrentSelectCity = mainStore(state => state.setCurrentSelectCity);
   return (
-     <Html
-        as='div'
-        fullscreen
-        style={{
-            left:0,
-            transform: 'translate(-45%, 20%)'
-        }}
-        prepend>
-            <div className="relative inline-block w-48">
-              <button
-                className="w-full bg-white border border-gray-300 rounded px-4 py-2 text-left shadow focus:outline-none"
-                onClick={() => setIsOpen((prev) => !prev)}
+    <div className="inline-block w-48 fixed top-20 z-10">
+        <button
+          className="w-full bg-white border border-gray-300 rounded px-4 py-2 text-left shadow focus:outline-none"
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          {currentAreaData?.areaName ?? "請選擇地區"}
+          <span className="float-right">&#9662;</span>
+        </button>
+        {isOpen && (
+          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow">
+            {powerDataArray.map((option) => (
+              <li
+                key={option.area}
+                className={`px-4 py-2 cursor-pointer hover:bg-blue-100 ${
+                  currentAreaData?.area === option.area ? "bg-blue-50" : ""
+                }`}
+                onClick={() => {
+                  const seletedGIS = taiwanGIS.find(e => e.area === option.area);
+                  const zoominCityData = mapCityDataArray.find(e=> e.cityId === seletedGIS?.cityId);
+                  console.log('seletedGIS',seletedGIS);
+                  setCurrentAreaData(option);
+                  if(zoominCityData){
+                    //console.log('zoominCityData',zoominCityData);
+                    setCurrentSelectCity(zoominCityData);
+                    setIsOpen(false);
+                  }
+                }}
               >
-                {currentSelect.areaName}
-                <span className="float-right">&#9662;</span>
-              </button>
-              {isOpen && (
-                <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow">
-                  {selectList.map((option) => (
-                    <li
-                      key={option.area}
-                      className={`px-4 py-2 cursor-pointer hover:bg-blue-100 ${
-                        currentSelect.area === option.area ? "bg-blue-50" : ""
-                      }`}
-                      onClick={() => {
-                        setIsOpen(false);
-                        setSelectorData(option)
-                      }}
-                    >
-                      {option.areaName}
-                    </li>
-                  ))}
-                </ul>
-              )}
-          </div>
+                {option.areaName}
+              </li>
+            ))}
+          </ul>
+        )}
+    </div>
 
-        </Html>
   );
 };
 
@@ -80,6 +78,7 @@ export const RnewEnegryTypeTabs:FC = () => {
   const setCurrentTargetInfo = mainStore(state => state.setCurrentTargetInfo);
   const selectStation = (address:string) => {
     const cityData = mapCityDataArray.find(e => address.includes(e.city));
+    //console.log('renew mapCityDataArray',mapCityDataArray);
     if(cityData){
       const infoData = {
         cityId:cityData.cityId,
@@ -101,27 +100,14 @@ export const RnewEnegryTypeTabs:FC = () => {
           {
             EnergyTypes.map((e,i) => <li key={i} 
                 onClick={()=>{
-                  //x: 0 y: 5.2047488963762514e-14z: 850
                   setEnergyType(e.type)
                   setCurrentSelectCity(defaultCityData)
-
                 }}
                 className={'p-2 w-full text-center cursor-pointer '+(energyType === e.type?'text-blue-600 border-b-blue-600 border-b-2':'text-gray-400')}>{e.name}</li>)
           }
         </ul>
         <div className="cityList overflow-auto h-full  border-t-2 border-gray-300">
            <ul className="p-2 w-full" style={{paddingBottom:150}}>
-              {/* {
-                mapCityDataArray.map((e,i) => {
-                  return (
-                    <li key={i} className="w-full p-2 cursor-pointer border-b-1 border-b-gray-400" onClick={()=>{
-                      setCurrentSelectCity(e)
-                    }}>
-                      <p>{e.city}</p>
-                    </li>
-                  )
-                })
-              } */}
               {
                 filterEnergyStations.map((e,i)=>{
                   return (
